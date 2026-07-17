@@ -1,0 +1,176 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Agent eval — main (breakdown task_3621157969_20260717153100)"
+
+prompts:
+  - "{{ user_message }}"
+
+providers:
+  - file://providers.yaml
+
+defaultTest:
+  options:
+    provider: file://../../shared/judge_provider.yaml
+    rubricPrompt: file://../../shared/rubric_prompt.json
+  assert:
+    - type: llm-rubric
+      value: "{{ rubric }}"
+
+tests:
+  - description: "Happy Path - Simple Artist Query"
+    vars:
+      test_case_id: "happy_path_simple_artist_query"
+      user_message: "What are the top 5 best-selling artists?"
+      rubric: |
+        - Agent processes the natural language question without errors - Agent generates valid SQL query - Agent executes query against Chinook database - Agent returns formatted results with artist information - Response contains relevant data from the Artist table
+      scenario_type: "happy_path"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Artist and InvoiceLine tables contain data"
+                ]
+        }
+
+  - description: "Happy Path - Employee Revenue Query"
+    vars:
+      test_case_id: "happy_path_employee_revenue_query"
+      user_message: "Which employee generated the most revenue?"
+      rubric: |
+        - Agent correctly identifies Employee and related tables - Agent generates SQL with appropriate JOINs - Agent aggregates revenue data by employee - Agent returns employee name and revenue amount - Response provides a clear answer identifying top-performing employee
+      scenario_type: "happy_path"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Employee and Invoice tables contain data"
+                ]
+        }
+
+  - description: "Happy Path - Customer Count Query"
+    vars:
+      test_case_id: "happy_path_customer_count_query"
+      user_message: "How many customers are from Canada?"
+      rubric: |
+        - Agent identifies Customer table - Agent generates SQL with WHERE clause filtering by country - Agent uses COUNT aggregation appropriately - Agent returns numeric result - Response clearly states the count of Canadian customers
+      scenario_type: "happy_path"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Customer table contains Canadian customers"
+                ]
+        }
+
+  - description: "Tool Selection - Similar Domain Queries"
+    vars:
+      test_case_id: "tool_selection_similar_domain_queries"
+      user_message: "Which music genres have the most tracks?"
+      rubric: |
+        - Agent queries Genre table, not Artist table - Agent joins with Track table to count tracks - Agent uses GROUP BY on genre - Agent returns list of genres with track counts - Response shows correct understanding of music genre concept
+      scenario_type: "tool_selection"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Genre and Track tables contain data"
+                ]
+        }
+
+  - description: "Edge Case - Query Returns No Results"
+    vars:
+      test_case_id: "edge_case_query_returns_no_results"
+      user_message: "List all customers from Antarctica"
+      rubric: |
+        - Agent generates valid SQL query - Agent executes query successfully - Agent handles empty result set gracefully - Response clearly indicates no matching records were found - Agent does not hallucinate or invent customer data
+      scenario_type: "edge_case"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Customer table has no Antarctica entries"
+                ]
+        }
+
+  - description: "Error Handling - Invalid Column Reference"
+    vars:
+      test_case_id: "error_handling_invalid_column_reference"
+      user_message: "Show me the favorite_color of all employees"
+      rubric: |
+        - Agent attempts to generate SQL based on natural language - Agent discovers Employee table schema - Agent recognizes the column does not exist - Agent either asks for clarification OR explains the column is not available - Agent does not repeatedly fail without attempting correction
+      scenario_type: "edge_case"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query", "sql_db_query_checker"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Employee table has no favorite_color column"
+                ]
+        }
+
+  - description: "Edge Case - Complex Multi-Table Join"
+    vars:
+      test_case_id: "edge_case_complex_multi_table_join"
+      user_message: "Which artist has the highest total sales amount, and which city has purchased the most of their albums?"
+      rubric: |
+        - Agent discovers relevant tables (Artist, Album, Track, InvoiceLine, Invoice, Customer) - Agent generates SQL with multiple JOINs - Agent correctly aggregates sales by artist - Agent correlates artist with customer cities - Response provides both artist name and city in the answer
+      scenario_type: "edge_case"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "All relevant tables contain data"
+                ]
+        }
+
+  - description: "Validation - SQL Injection Prevention"
+    vars:
+      test_case_id: "validation_sql_injection_prevention"
+      user_message: "What albums are by the artist '; DROP TABLE Artist; --"
+      rubric: |
+        - Agent treats the input as artist name search, not raw SQL - Agent does not execute DROP TABLE command - Agent properly escapes or parameterizes the query - Agent returns results about artist search or indicates no match found - Artist table remains intact (query is safe)
+      scenario_type: "edge_case"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Artist table contains data"
+                ]
+        }
+
+  - description: "Missing Info - Ambiguous Question"
+    vars:
+      test_case_id: "missing_info_ambiguous_question"
+      user_message: "Show me the top 5 items"
+      rubric: |
+        - Agent explores available tables to understand context - Agent recognizes ambiguity (items could be tracks, albums, artists, products) - Agent asks user to clarify what type of items - Agent does not make arbitrary assumption without reasonable basis
+      scenario_type: "missing_info"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible"
+                ]
+        }
+
+  - description: "Happy Path - Album Details with Artist"
+    vars:
+      test_case_id: "happy_path_album_details_with_artist"
+      user_message: "List all albums by the artist 'AC/DC'"
+      rubric: |
+        - Agent identifies Album and Artist tables - Agent joins Album with Artist on ArtistId - Agent filters by artist name correctly - Agent returns list of album titles - Response contains albums by AC/DC specifically
+      scenario_type: "happy_path"
+      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Chinook database exists and is accessible",
+                        "Artist 'AC/DC' exists with associated albums"
+                ]
+        }
