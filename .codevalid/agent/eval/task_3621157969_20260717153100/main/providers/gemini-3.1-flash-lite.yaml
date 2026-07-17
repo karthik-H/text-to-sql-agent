@@ -1,0 +1,5 @@
+id: file://provider_main.py
+label: "main / Gemini 3.1 Flash Lite"
+config:
+  model: gemini-3.1-flash-lite
+  temperature: 0

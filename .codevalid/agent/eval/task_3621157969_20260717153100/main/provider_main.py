@@ -19,6 +19,13 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
+# Module-level OTEL setup — set once; call_api must NOT call trace.set_tracer_provider again.
+_exporter = InMemorySpanExporter()
+_otel_provider = TracerProvider()
+_otel_provider.add_span_processor(SimpleSpanProcessor(_exporter))
+trace.set_tracer_provider(_otel_provider)
+LangChainInstrumentor().instrument(tracer_provider=_otel_provider)
+
 _DB_PATH = WORKSPACE_ROOT / "chinook.db"
 _DB_EXISTS_AT_IMPORT = _DB_PATH.exists()
 _ORIGINAL_CHAT_ANTHROPIC = getattr(agent_module, "ChatAnthropic", None)
@@ -346,20 +353,7 @@ def call_api(prompt: str, options: Dict[str, Any], context: Dict[str, Any]) -> D
     precondition = vars_dict.get("precondition")
     config = options.get("config", {}) or {}
 
-    _exporter = InMemorySpanExporter()
-    _provider = TracerProvider()
-    _provider.add_span_processor(SimpleSpanProcessor(_exporter))
-    instrumentor = LangChainInstrumentor()
-    instrumentation_enabled = False
-
     try:
-        trace.set_tracer_provider(_provider)
-    except Exception:
-        pass
-
-    try:
-        instrumentor.instrument(tracer_provider=_provider)
-        instrumentation_enabled = True
         setup_dependencies(test_case_id, precondition, config)
         answer = _invoke_agent(prompt, config, _exporter)
         spans = list(_exporter.get_finished_spans())
@@ -367,8 +361,3 @@ def call_api(prompt: str, options: Dict[str, Any], context: Dict[str, Any]) -> D
         return {"output": json.dumps({"answer": answer, "trace": trace_tree}, ensure_ascii=False)}
     finally:
         cleanup_dependencies()
-        if instrumentation_enabled:
-            try:
-                instrumentor.uninstrument()
-            except Exception:
-                pass
