@@ -27,3 +27,17 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# CodeValid — auto-added
+node_modules/
+dist/
+build/
+coverage/
+.next/
+out/
+.turbo/
+.pytest_cache/
+.codevalid/ui/Dockerfile
+.codevalid/ui/playwright.config.js
+.codevalid/ui/helper/
+.codevalid/ui/helpers/
