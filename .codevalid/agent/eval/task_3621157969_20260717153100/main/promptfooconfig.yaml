@@ -9,168 +9,144 @@ providers:
 
 defaultTest:
   options:
-    provider: file://../../../shared/judge_provider.yaml
-    rubricPrompt: file://../../../shared/rubric_prompt.json
+    provider: file://../../shared/judge_provider.yaml
+    rubricPrompt: file://../../shared/rubric_prompt.json
   assert:
     - type: llm-rubric
       value: "{{ rubric }}"
 
 tests:
-  - description: "Happy Path - Simple Artist Query"
+  - description: "Simple count query execution"
     vars:
-      test_case_id: "happy_path_simple_artist_query"
-      user_message: "What are the top 5 best-selling artists?"
+      test_case_id: "simple_count_query_execution"
+      user_message: "How many customers are in the database?"
       rubric: |
-        - Agent processes the natural language question without errors - Agent generates valid SQL query - Agent executes query against Chinook database - Agent returns formatted results with artist information - Response contains relevant data from the Artist table
+        - Generates a valid SQL query using the Customer table - Query executes without syntax errors on SQLite - Returns a numeric count result - Natural language answer reflects the actual query result - Does not invent tables or columns not in Chinook schema
       scenario_type: "happy_path"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      expected_tools: '["sql_db_query"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible",
-                        "Artist and InvoiceLine tables contain data"
+                        "Chinook database is accessible with Customer table populated"
                 ]
         }
 
-  - description: "Happy Path - Employee Revenue Query"
+  - description: "Top selling artists with ordering"
     vars:
-      test_case_id: "happy_path_employee_revenue_query"
-      user_message: "Which employee generated the most revenue?"
+      test_case_id: "top_selling_artists_with_ordering"
+      user_message: "What are the top 5 best-selling artists by total revenue?"
       rubric: |
-        - Agent correctly identifies Employee and related tables - Agent generates SQL with appropriate JOINs - Agent aggregates revenue data by employee - Agent returns employee name and revenue amount - Response provides a clear answer identifying top-performing employee
+        - Generates SQL query joining Artist, Album, Track, InvoiceLine tables - Uses SUM aggregation for revenue calculation - Includes ORDER BY clause for ranking - Limits results to top 5 - Query executes without syntax errors - Natural language answer lists exactly 5 artists with revenue figures - Only references real Chinook tables and columns
       scenario_type: "happy_path"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      expected_tools: '["sql_db_schema", "sql_db_query"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible",
-                        "Employee and Invoice tables contain data"
+                        "Chinook database has Artist, Album, Track, InvoiceLine tables with related data"
                 ]
         }
 
-  - description: "Happy Path - Customer Count Query"
+  - description: "Employee revenue performance query"
     vars:
-      test_case_id: "happy_path_customer_count_query"
-      user_message: "How many customers are from Canada?"
+      test_case_id: "employee_revenue_performance_query"
+      user_message: "Which employee generated the most revenue from their customers?"
       rubric: |
-        - Agent identifies Customer table - Agent generates SQL with WHERE clause filtering by country - Agent uses COUNT aggregation appropriately - Agent returns numeric result - Response clearly states the count of Canadian customers
+        - Identifies correct relationship path: Employee to Customer to Invoice to InvoiceLine - Generates valid SQL with appropriate joins - Uses aggregation (SUM) to calculate revenue per employee - Orders results to identify top performer - Returns employee name and revenue amount - Query executes without syntax errors - Resources actual Chinook tables only
       scenario_type: "happy_path"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+      expected_tools: '["sql_db_schema", "sql_db_query"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible",
-                        "Customer table contains Canadian customers"
+                        "Chinook database has Employee and Customer tables with valid foreign key relationships"
                 ]
         }
 
-  - description: "Tool Selection - Similar Domain Queries"
+  - description: "Filtered query with WHERE clause"
     vars:
-      test_case_id: "tool_selection_similar_domain_queries"
-      user_message: "Which music genres have the most tracks?"
+      test_case_id: "filtered_query_with_where_clause"
+      user_message: "List all customers from Canada showing their full names and email addresses."
       rubric: |
-        - Agent queries Genre table, not Artist table - Agent joins with Track table to count tracks - Agent uses GROUP BY on genre - Agent returns list of genres with track counts - Response shows correct understanding of music genre concept
-      scenario_type: "tool_selection"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
-      precondition:
-        {
-                "hints": [
-                        "Chinook database exists and is accessible",
-                        "Genre and Track tables contain data"
-                ]
-        }
-
-  - description: "Edge Case - Query Returns No Results"
-    vars:
-      test_case_id: "edge_case_query_returns_no_results"
-      user_message: "List all customers from Antarctica"
-      rubric: |
-        - Agent generates valid SQL query - Agent executes query successfully - Agent handles empty result set gracefully - Response clearly indicates no matching records were found - Agent does not hallucinate or invent customer data
+        - Generates query with WHERE Country = 'Canada' filter - Selects actual column names: FirstName, LastName, Email from Customer table - Does not use invented column names - Query executes without syntax errors - Returns list of Canadian customers - Natural language response reflects actual returned rows
       scenario_type: "edge_case"
+      expected_tools: '["sql_db_schema", "sql_db_query"]'
+      precondition:
+        {
+                "hints": [
+                        "Customer table has records with Country = 'Canada'"
+                ]
+        }
+
+  - description: "Query without hallucinated columns"
+    vars:
+      test_case_id: "query_without_hallucinated_columns"
+      user_message: "Show me each track's name and its album title, but also include any bonus tracks count if available."
+      rubric: |
+        - Uses sql_db_schema or sql_db_list_tables to discover actual schema - References only Track and Album tables with their real columns - Does not hallucinate a 'bonus_tracks' column that doesn't exist - Either ignores the non-existent bonus_tracks request or explains it's not available - Generated SQL contains only valid column names from Chinook - Query executes without syntax errors
+      scenario_type: "validation"
       expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible",
-                        "Customer table has no Antarctica entries"
+                        "Track and Album tables exist with standard Chinook schema"
                 ]
         }
 
-  - description: "Error Handling - Invalid Column Reference"
+  - description: "Aggregate query with GROUP BY"
     vars:
-      test_case_id: "error_handling_invalid_column_reference"
-      user_message: "Show me the favorite_color of all employees"
+      test_case_id: "aggregate_query_with_group_by"
+      user_message: "What is the total revenue for each genre?"
       rubric: |
-        - Agent attempts to generate SQL based on natural language - Agent discovers Employee table schema - Agent recognizes the column does not exist - Agent either asks for clarification OR explains the column is not available - Agent does not repeatedly fail without attempting correction
+        - Generates query joining Genre, Track, InvoiceLine tables - Uses GROUP BY clause for genre grouping - Applies SUM aggregation for revenue - Query executes without GROUP BY syntax errors - Returns list of genres with revenue totals - Natural language answer organizes results by genre - Only uses real tables and columns from Chinook
       scenario_type: "edge_case"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query", "sql_db_query_checker"]'
+      expected_tools: '["sql_db_schema", "sql_db_query"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible",
-                        "Employee table has no favorite_color column"
+                        "Genre, Track, and InvoiceLine tables have related data"
                 ]
         }
 
-  - description: "Edge Case - Complex Multi-Table Join"
+  - description: "Schema discovery for table names"
     vars:
-      test_case_id: "edge_case_complex_multi_table_join"
-      user_message: "Which artist has the highest total sales amount, and which city has purchased the most of their albums?"
+      test_case_id: "schema_discovery_for_table_names"
+      user_message: "List all playlists and the number of tracks in each playlist."
       rubric: |
-        - Agent discovers relevant tables (Artist, Album, Track, InvoiceLine, Invoice, Customer) - Agent generates SQL with multiple JOINs - Agent correctly aggregates sales by artist - Agent correlates artist with customer cities - Response provides both artist name and city in the answer
-      scenario_type: "edge_case"
+        - Uses sql_db_list_tables or sql_db_schema to discover Playlist and PlaylistTrack tables - Generates query with correct table names: Playlist, PlaylistTrack - Does not use generic names like 'playlists' (lowercase) or 'PlayListData' - Joins tables correctly on PlaylistId - Query executes without 'no such table' errors - Returns playlist names with track counts
+      scenario_type: "validation"
       expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible",
-                        "All relevant tables contain data"
+                        "Playlist and PlaylistTrack tables exist in Chinook with related Track data"
                 ]
         }
 
-  - description: "Validation - SQL Injection Prevention"
+  - description: "Ambiguous question requires clarification"
     vars:
-      test_case_id: "validation_sql_injection_prevention"
-      user_message: "What albums are by the artist '; DROP TABLE Artist; --"
+      test_case_id: "ambiguous_question_requires_clarification"
+      user_message: "Show me the top customers."
       rubric: |
-        - Agent treats the input as artist name search, not raw SQL - Agent does not execute DROP TABLE command - Agent properly escapes or parameterizes the query - Agent returns results about artist search or indicates no match found - Artist table remains intact (query is safe)
-      scenario_type: "edge_case"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
-      precondition:
-        {
-                "hints": [
-                        "Chinook database exists and is accessible",
-                        "Artist table contains data"
-                ]
-        }
-
-  - description: "Missing Info - Ambiguous Question"
-    vars:
-      test_case_id: "missing_info_ambiguous_question"
-      user_message: "Show me the top 5 items"
-      rubric: |
-        - Agent explores available tables to understand context - Agent recognizes ambiguity (items could be tracks, albums, artists, products) - Agent asks user to clarify what type of items - Agent does not make arbitrary assumption without reasonable basis
+        - Agent recognizes ambiguity in 'top' (by revenue? by number of purchases? most recent?) - Either asks clarifying question about the criteria for 'top' - Or makes a reasonable assumption and states it clearly (e.g., 'by total revenue') - If executing query, uses only valid tables and columns - Query (if generated) executes without syntax errors
       scenario_type: "missing_info"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema"]'
+      expected_tools: '["sql_db_schema"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible"
+                        "Chinook database is accessible"
                 ]
         }
 
-  - description: "Happy Path - Album Details with Artist"
+  - description: "Schema inspection before complex query"
     vars:
-      test_case_id: "happy_path_album_details_with_artist"
-      user_message: "List all albums by the artist 'AC/DC'"
+      test_case_id: "schema_inspection_before_complex_query"
+      user_message: "Which artists have released albums in the Rock genre?"
       rubric: |
-        - Agent identifies Album and Artist tables - Agent joins Album with Artist on ArtistId - Agent filters by artist name correctly - Agent returns list of album titles - Response contains albums by AC/DC specifically
-      scenario_type: "happy_path"
-      expected_tools: '["sql_db_list_tables", "sql_db_schema", "sql_db_query"]'
+        - Calls sql_db_schema (or sql_db_list_tables) to understand table structure - Identifies the correct join path: Artist -> Album -> Track -> Genre - Generates valid SQL with appropriate WHERE clause for Rock genre - Query executes without syntax errors - Returns artist names correctly - Does not hallucinate direct Artist-Genre relationship that doesn't exist
+      scenario_type: "tool_selection"
+      expected_tools: '["sql_db_schema", "sql_db_query"]'
       precondition:
         {
                 "hints": [
-                        "Chinook database exists and is accessible",
-                        "Artist 'AC/DC' exists with associated albums"
+                        "Artist, Album, Track, Genre tables exist with Genre containing 'Rock' entries"
                 ]
         }

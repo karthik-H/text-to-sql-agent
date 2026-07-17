@@ -3,9 +3,9 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-WORKSPACE_ROOT = Path("/workspace/agents")
+WORKSPACE_ROOT = Path("/private/var/folders/64/v39k3dlx3kl6dhmf1gjqpmr4rlcd68/T/test_gen_ltyeo56q")
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
@@ -19,127 +19,106 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-# Module-level OTEL setup — set once; call_api must NOT call trace.set_tracer_provider again.
-_exporter = InMemorySpanExporter()
-_otel_provider = TracerProvider()
-_otel_provider.add_span_processor(SimpleSpanProcessor(_exporter))
-trace.set_tracer_provider(_otel_provider)
-LangChainInstrumentor().instrument(tracer_provider=_otel_provider)
-
-_DB_PATH = WORKSPACE_ROOT / "chinook.db"
-_DB_EXISTS_AT_IMPORT = _DB_PATH.exists()
-_ORIGINAL_CHAT_ANTHROPIC = getattr(agent_module, "ChatAnthropic", None)
-_PATCH_STATE: Dict[str, Any] = {"active": False, "patched": []}
-
-
-def _seed_happy_path_simple_artist_query(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_happy_path_employee_revenue_query(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_happy_path_customer_count_query(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_tool_selection_similar_domain_queries(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_edge_case_query_returns_no_results(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_error_handling_invalid_column_reference(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_edge_case_complex_multi_table_join(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_validation_sql_injection_prevention(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_missing_info_ambiguous_question(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-def _seed_happy_path_album_details_with_artist(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    return
-
-
-_SEED_DISPATCH = {
-    "happy_path_simple_artist_query": _seed_happy_path_simple_artist_query,
-    "happy_path_employee_revenue_query": _seed_happy_path_employee_revenue_query,
-    "happy_path_customer_count_query": _seed_happy_path_customer_count_query,
-    "tool_selection_similar_domain_queries": _seed_tool_selection_similar_domain_queries,
-    "edge_case_query_returns_no_results": _seed_edge_case_query_returns_no_results,
-    "error_handling_invalid_column_reference": _seed_error_handling_invalid_column_reference,
-    "edge_case_complex_multi_table_join": _seed_edge_case_complex_multi_table_join,
-    "validation_sql_injection_prevention": _seed_validation_sql_injection_prevention,
-    "missing_info_ambiguous_question": _seed_missing_info_ambiguous_question,
-    "happy_path_album_details_with_artist": _seed_happy_path_album_details_with_artist,
+_ORIGINAL_CHAT_ANTHROPIC = agent_module.ChatAnthropic
+_PATCHES_APPLIED = False
+_CURRENT_PROVIDER = None
+_CURRENT_INSTRUMENTOR = None
+_exporter = None
+_PROVIDER_BASELINE = {
+    "ChatAnthropic": _ORIGINAL_CHAT_ANTHROPIC,
 }
 
 
-def setup_dependencies(test_case_id: str, precondition: Any, config: Dict[str, Any]) -> None:
-    if not _DB_EXISTS_AT_IMPORT or not _DB_PATH.exists():
-        raise FileNotFoundError(f"Expected SQLite database at {_DB_PATH}")
-    seed_fn = _SEED_DISPATCH.get(test_case_id)
-    if seed_fn is None:
-        raise ValueError(f"Unknown test_case_id for setup: {test_case_id}")
-    seed_fn(test_case_id, precondition, config)
+def _seed_simple_count_query_execution(precondition, config):
+    return None
 
 
-def cleanup_dependencies() -> None:
-    _restore_agent_factory()
-    if _DB_EXISTS_AT_IMPORT and not _DB_PATH.exists():
-        raise RuntimeError(f"SQLite database was unexpectedly removed: {_DB_PATH}")
+def _seed_top_selling_artists_with_ordering(precondition, config):
+    return None
 
 
-def _build_llm(config: Dict[str, Any]) -> ChatOpenAI:
-    model_name = config.get("model")
+def _seed_employee_revenue_performance_query(precondition, config):
+    return None
+
+
+def _seed_filtered_query_with_where_clause(precondition, config):
+    return None
+
+
+def _seed_query_without_hallucinated_columns(precondition, config):
+    return None
+
+
+def _seed_aggregate_query_with_group_by(precondition, config):
+    return None
+
+
+def _seed_schema_discovery_for_table_names(precondition, config):
+    return None
+
+
+def _seed_ambiguous_question_requires_clarification(precondition, config):
+    return None
+
+
+def _seed_schema_inspection_before_complex_query(precondition, config):
+    return None
+
+
+def setup_dependencies(test_case_id, precondition, config):
+    seeders = {
+        "simple_count_query_execution": _seed_simple_count_query_execution,
+        "top_selling_artists_with_ordering": _seed_top_selling_artists_with_ordering,
+        "employee_revenue_performance_query": _seed_employee_revenue_performance_query,
+        "filtered_query_with_where_clause": _seed_filtered_query_with_where_clause,
+        "query_without_hallucinated_columns": _seed_query_without_hallucinated_columns,
+        "aggregate_query_with_group_by": _seed_aggregate_query_with_group_by,
+        "schema_discovery_for_table_names": _seed_schema_discovery_for_table_names,
+        "ambiguous_question_requires_clarification": _seed_ambiguous_question_requires_clarification,
+        "schema_inspection_before_complex_query": _seed_schema_inspection_before_complex_query,
+    }
+    seeder = seeders.get(test_case_id)
+    if seeder is None:
+        return None
+    return seeder(precondition, config)
+
+
+def cleanup_dependencies():
+    global _PATCHES_APPLIED
+    agent_module.ChatAnthropic = _PROVIDER_BASELINE["ChatAnthropic"]
+    _PATCHES_APPLIED = False
+
+
+class _PatchedChatAnthropic(ChatOpenAI):
+    def __init__(self, *args, **kwargs):
+        model_name = kwargs.pop("model", None) or os.environ.get("CODEVALID_EVAL_MODEL")
+        temperature = kwargs.pop("temperature", 0)
+        if not model_name:
+            raise ValueError("Missing eval model. Expected options.config.model to be provided.")
+        base_url = os.environ["LITELLM_BASE_URL"]
+        api_key = os.environ["LITELLM_API_KEY"]
+        super().__init__(
+            model=model_name,
+            temperature=temperature,
+            base_url=base_url,
+            api_key=api_key,
+            **kwargs,
+        )
+
+
+def _patch_agent_factory(config):
+    global _PATCHES_APPLIED
+    model_name = (config or {}).get("model")
     if not model_name:
-        raise ValueError("Missing required options.config.model")
-    base_url = os.environ["LITELLM_BASE_URL"]
-    api_key = os.environ["LITELLM_API_KEY"]
-    return ChatOpenAI(
-        model=model_name,
-        temperature=0,
-        api_key=api_key,
-        base_url=base_url,
-    )
+        raise ValueError("options.config.model is required")
+    os.environ["CODEVALID_EVAL_MODEL"] = model_name
+    agent_module.ChatAnthropic = _PatchedChatAnthropic
+    _PATCHES_APPLIED = True
 
 
-class _PatchedChatAnthropic:
-    def __new__(cls, *args: Any, **kwargs: Any) -> ChatOpenAI:
-        config = copy.deepcopy(_PATCH_STATE.get("config") or {})
-        return _build_llm(config)
-
-
-def _patch_agent_factory(config: Dict[str, Any]) -> None:
-    _restore_agent_factory()
-    _PATCH_STATE["config"] = copy.deepcopy(config or {})
-    _PATCH_STATE["patched"] = []
-    if hasattr(agent_module, "ChatAnthropic"):
-        _PATCH_STATE["patched"].append((agent_module, "ChatAnthropic", getattr(agent_module, "ChatAnthropic")))
-        agent_module.ChatAnthropic = _PatchedChatAnthropic
-    _PATCH_STATE["active"] = True
-
-
-def _restore_agent_factory() -> None:
-    patched = _PATCH_STATE.get("patched") or []
-    for module_obj, attr_name, original in reversed(patched):
-        setattr(module_obj, attr_name, original)
-    _PATCH_STATE["patched"] = []
-    _PATCH_STATE["active"] = False
-    _PATCH_STATE.pop("config", None)
-    if _ORIGINAL_CHAT_ANTHROPIC is not None:
-        agent_module.ChatAnthropic = _ORIGINAL_CHAT_ANTHROPIC
+def _restore_agent_factory():
+    cleanup_dependencies()
+    os.environ.pop("CODEVALID_EVAL_MODEL", None)
 
 
 def _serialize_value(value: Any) -> Any:
@@ -148,7 +127,10 @@ def _serialize_value(value: Any) -> Any:
     if isinstance(value, (str, int, float, bool)):
         return value
     if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
+        try:
+            return value.decode("utf-8")
+        except Exception:
+            return repr(value)
     if isinstance(value, dict):
         return {str(k): _serialize_value(v) for k, v in value.items()}
     if isinstance(value, (list, tuple, set)):
@@ -156,12 +138,6 @@ def _serialize_value(value: Any) -> Any:
     content = getattr(value, "content", None)
     if content is not None:
         return _serialize_value(content)
-    additional_kwargs = getattr(value, "additional_kwargs", None)
-    if additional_kwargs is not None:
-        return {
-            "content": _serialize_value(content),
-            "additional_kwargs": _serialize_value(additional_kwargs),
-        }
     if hasattr(value, "model_dump"):
         try:
             return _serialize_value(value.model_dump())
@@ -175,189 +151,193 @@ def _serialize_value(value: Any) -> Any:
     return str(value)
 
 
-def _coerce_text(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value
-    if isinstance(value, list):
-        parts: List[str] = []
-        for item in value:
-            if isinstance(item, str):
-                parts.append(item)
-            elif isinstance(item, dict):
-                text_part = item.get("text") or item.get("content") or item.get("value")
-                if text_part is not None:
-                    parts.append(_coerce_text(text_part))
-                else:
-                    parts.append(json.dumps(_serialize_value(item), ensure_ascii=False))
-            else:
-                nested = getattr(item, "text", None)
-                if nested is not None:
-                    parts.append(_coerce_text(nested))
-                else:
-                    nested_content = getattr(item, "content", None)
-                    if nested_content is not None and nested_content is not value:
-                        parts.append(_coerce_text(nested_content))
-                    else:
-                        parts.append(str(item))
-        return "\n".join(part for part in parts if part)
-    if isinstance(value, dict):
-        for key in ("answer", "output", "content", "text", "result"):
-            if key in value:
-                return _coerce_text(value[key])
-        if "messages" in value and value["messages"]:
-            return _coerce_text(value["messages"][-1])
-        return json.dumps(_serialize_value(value), ensure_ascii=False)
-    content = getattr(value, "content", None)
-    if content is not None and content is not value:
-        return _coerce_text(content)
-    if hasattr(value, "text"):
-        text = getattr(value, "text")
-        if text is not None:
-            return _coerce_text(text)
-    return str(value)
-
-
 def _extract_answer(result: Any) -> str:
+    if result is None:
+        return ""
+    if isinstance(result, str):
+        return result
     if isinstance(result, dict):
         messages = result.get("messages")
         if isinstance(messages, list) and messages:
-            return _coerce_text(messages[-1]).strip()
-        for key in ("output", "answer", "result", "content"):
+            return _extract_answer(messages[-1])
+        for key in ("output", "answer", "content", "text", "result"):
             if key in result:
-                text = _coerce_text(result[key]).strip()
-                if text:
-                    return text
-    text = _coerce_text(result).strip()
-    return text
+                return _extract_answer(result.get(key))
+        return json.dumps(_serialize_value(result), ensure_ascii=False)
+    content = getattr(result, "content", None)
+    if content is not None:
+        if isinstance(content, list):
+            parts = []
+            for item in content:
+                if isinstance(item, dict):
+                    text = item.get("text") or item.get("content") or item.get("value")
+                    if text:
+                        parts.append(str(text))
+                else:
+                    parts.append(str(item))
+            return "\n".join([p for p in parts if p]).strip()
+        return str(content)
+    if isinstance(result, list) and result:
+        return _extract_answer(result[-1])
+    return str(result)
 
 
-def _map_gen_ai(attrs: Dict[str, Any]) -> Dict[str, Any]:
-    candidates = {
-        "system": ["gen_ai.system", "llm.system"],
-        "operation_name": ["gen_ai.operation.name"],
-        "request_model": ["gen_ai.request.model", "llm.request.model"],
-        "prompt": ["gen_ai.prompt", "llm.prompts", "input.value", "input"],
-        "completion": ["gen_ai.completion", "llm.output_messages", "output.value", "output"],
-        "tool_name": ["gen_ai.tool.name", "tool.name"],
-        "input": ["input.value", "input", "gen_ai.input.messages", "gen_ai.tool.call.arguments"],
-        "output": ["output.value", "output", "gen_ai.output.messages", "gen_ai.tool.call.result"],
-    }
-    mapped: Dict[str, Any] = {}
-    for stable_key, keys in candidates.items():
-        for key in keys:
-            if key in attrs and attrs[key] is not None:
-                mapped[stable_key] = _serialize_value(attrs[key])
-                break
-    return mapped
+def _candidate_attr(attributes: Dict[str, Any], keys: List[str]) -> Any:
+    for key in keys:
+        if key in attributes and attributes[key] not in (None, "", [], {}):
+            return attributes[key]
+    return None
 
 
-def _span_kind(operation_name: str, span_name: str, gen_ai: Dict[str, Any]) -> str:
-    op = (operation_name or "").lower()
-    name = (span_name or "").lower()
-    tool_name = str(gen_ai.get("tool_name") or "").lower()
-    if "tool" in op or "tool" in name or tool_name:
+def _span_kind(span_name: str, attributes: Dict[str, Any]) -> str:
+    operation = _candidate_attr(attributes, ["gen_ai.operation.name", "operation.name", "langchain.span.kind"])
+    if operation in {"execute_tool", "tool"}:
         return "tool"
-    if op in {"chat", "completion", "generate"} or "llm" in name or "chat" in name:
+    if operation in {"chat", "llm", "completion"}:
         return "llm"
-    if "agent" in op or "workflow" in op or "agent" in name or "chain" in name:
+    if operation in {"invoke_agent", "agent"}:
         return "agent"
+    if operation in {"invoke_workflow", "workflow", "chain"}:
+        return "workflow"
+    if any(k in attributes for k in ["gen_ai.tool.name", "tool.name"]):
+        return "tool"
+    if any(k in attributes for k in ["gen_ai.request.model", "llm.request.model", "gen_ai.system", "llm.system"]):
+        return "llm"
+    lowered = (span_name or "").lower()
+    if "tool" in lowered:
+        return "tool"
+    if "agent" in lowered:
+        return "agent"
+    if "llm" in lowered or "chat" in lowered:
+        return "llm"
     return "span"
 
 
-def _span_to_node(span: Any) -> Dict[str, Any]:
+def _span_to_node(span) -> Dict[str, Any]:
     attrs = dict(getattr(span, "attributes", {}) or {})
-    serialized_attrs = {str(k): _serialize_value(v) for k, v in attrs.items()}
-    gen_ai = _map_gen_ai(attrs)
-    operation_name = str(gen_ai.get("operation_name") or attrs.get("gen_ai.operation.name") or "")
-    node_type = _span_kind(operation_name, getattr(span, "name", ""), gen_ai)
-    node: Dict[str, Any] = {
-        "type": node_type,
-        "name": getattr(span, "name", ""),
-        "span_id": format(getattr(getattr(span, "context", None), "span_id", 0), "x"),
-        "attributes": serialized_attrs,
-        "gen_ai": gen_ai,
+    gen_ai = {
+        "system": _serialize_value(_candidate_attr(attrs, ["gen_ai.system", "llm.system"])),
+        "operation_name": _serialize_value(_candidate_attr(attrs, ["gen_ai.operation.name", "operation.name"])),
+        "request_model": _serialize_value(_candidate_attr(attrs, ["gen_ai.request.model", "llm.request.model", "gen_ai.response.model"])),
+        "prompt": _serialize_value(_candidate_attr(attrs, ["gen_ai.prompt", "llm.prompts", "gen_ai.input.messages", "input.value", "input"])),
+        "completion": _serialize_value(_candidate_attr(attrs, ["gen_ai.completion", "llm.output_messages", "gen_ai.output.messages", "output.value", "output"])),
+        "tool_name": _serialize_value(_candidate_attr(attrs, ["gen_ai.tool.name", "tool.name"])),
+        "input": _serialize_value(_candidate_attr(attrs, ["input.value", "input", "gen_ai.tool.call.arguments", "gen_ai.input.messages", "llm.prompts"])),
+        "output": _serialize_value(_candidate_attr(attrs, ["output.value", "output", "gen_ai.tool.call.result", "gen_ai.output.messages", "llm.output_messages"])),
+    }
+    node = {
+        "name": span.name,
+        "type": _span_kind(span.name, attrs),
+        "span_id": format(span.context.span_id, "x"),
+        "trace_id": format(span.context.trace_id, "x"),
+        "gen_ai": {k: v for k, v in gen_ai.items() if v not in (None, "", [], {})},
+        "attributes": {str(k): _serialize_value(v) for k, v in attrs.items()},
         "children": [],
     }
-    if node_type == "tool":
-        tool_name = gen_ai.get("tool_name") or serialized_attrs.get("gen_ai.tool.name") or serialized_attrs.get("tool.name")
+    if node["type"] == "tool":
+        tool_name = node["gen_ai"].get("tool_name")
         if tool_name:
             node["name"] = tool_name
-    if gen_ai.get("input") is not None:
-        node["input"] = gen_ai.get("input")
-    elif gen_ai.get("prompt") is not None:
-        node["input"] = gen_ai.get("prompt")
-    if gen_ai.get("output") is not None:
-        node["output"] = gen_ai.get("output")
-    elif gen_ai.get("completion") is not None:
-        node["output"] = gen_ai.get("completion")
+    input_value = node["gen_ai"].get("input") or node["gen_ai"].get("prompt")
+    output_value = node["gen_ai"].get("output") or node["gen_ai"].get("completion")
+    if input_value is not None:
+        node["input"] = input_value
+    if output_value is not None:
+        node["output"] = output_value
     return node
 
 
-def _spans_to_tree(spans: List[Any], *, exclude_names: set[str]) -> List[Dict[str, Any]]:
+def _spans_to_tree(spans: List[Any], exclude_names: Optional[set] = None) -> List[Dict[str, Any]]:
+    exclude_names = exclude_names or set()
     filtered = sorted(
-        [s for s in spans if getattr(s, "name", "") not in exclude_names],
+        [s for s in spans if s.name not in exclude_names],
         key=lambda s: getattr(s, "start_time", 0) or 0,
     )
     nodes = {s.context.span_id: _span_to_node(s) for s in filtered}
     child_ids: Dict[int, List[int]] = {}
     roots: List[int] = []
-    span_ids = set(nodes)
+    span_ids = set(nodes.keys())
 
-    for s in filtered:
-        sid = s.context.span_id
-        parent = s.parent.span_id if getattr(s, "parent", None) is not None else None
+    for span in filtered:
+        sid = span.context.span_id
+        parent = span.parent.span_id if getattr(span, "parent", None) is not None else None
         if parent is not None and parent in span_ids:
             child_ids.setdefault(parent, []).append(sid)
         else:
             roots.append(sid)
 
-    def attach(sid: int) -> Dict[str, Any]:
-        node = nodes[sid]
-        node["children"] = [attach(cid) for cid in child_ids.get(sid, [])]
+    def attach(span_id: int) -> Dict[str, Any]:
+        node = nodes[span_id]
+        node["children"] = [attach(child_id) for child_id in child_ids.get(span_id, [])]
         return node
 
-    return [attach(rid) for rid in roots]
+    return [attach(root_id) for root_id in roots]
 
 
 def _build_trace(user_input: str, answer: str, spans: List[Any]) -> Dict[str, Any]:
     if not spans:
         return {"type": "user_input", "input": user_input, "output": answer, "children": [], "spans": []}
+    children = _spans_to_tree(spans, exclude_names={"user_input"})
     return {
         "type": "user_input",
         "input": user_input,
         "output": answer,
-        "children": _spans_to_tree(spans, exclude_names={"user_input"}),
+        "children": children,
+        "spans": [_span_to_node(s) for s in sorted(spans, key=lambda s: getattr(s, "start_time", 0) or 0)],
     }
 
 
-def _invoke_agent(prompt: str, config: Dict[str, Any], _exporter: InMemorySpanExporter) -> str:
+def _start_instrumentation():
+    global _exporter, _CURRENT_PROVIDER, _CURRENT_INSTRUMENTOR
+    _exporter = InMemorySpanExporter()
+    _CURRENT_PROVIDER = TracerProvider()
+    _CURRENT_PROVIDER.add_span_processor(SimpleSpanProcessor(_exporter))
+    trace.set_tracer_provider(_CURRENT_PROVIDER)
+    _CURRENT_INSTRUMENTOR = LangChainInstrumentor()
+    _CURRENT_INSTRUMENTOR.instrument(tracer_provider=_CURRENT_PROVIDER)
+
+
+def _stop_instrumentation():
+    global _CURRENT_INSTRUMENTOR, _CURRENT_PROVIDER
+    if _CURRENT_INSTRUMENTOR is not None:
+        try:
+            _CURRENT_INSTRUMENTOR.uninstrument()
+        except Exception:
+            pass
+    _CURRENT_INSTRUMENTOR = None
+    _CURRENT_PROVIDER = None
+
+
+def _invoke_agent(prompt: str, config: Dict[str, Any]) -> Any:
     _patch_agent_factory(config)
     agent = agent_module.create_sql_agent()
-    _exporter.clear()
     tracer = trace.get_tracer("promptfoo-eval")
+    _exporter.clear()
     with tracer.start_as_current_span("user_input") as root:
-        root.set_attribute("input", prompt)
+        root.set_attribute("input.value", prompt)
         result = agent.invoke({"messages": [{"role": "user", "content": prompt}]})
         answer = _extract_answer(result)
-        root.set_attribute("output", answer)
-    return answer
+        root.set_attribute("output.value", answer)
+    spans = list(_exporter.get_finished_spans())
+    trace_tree = _build_trace(prompt, answer, spans)
+    return answer, trace_tree
 
 
-def call_api(prompt: str, options: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, str]:
+def call_api(prompt, options, context):
     options = options or {}
     context = context or {}
     vars_dict = context.get("vars", {}) or {}
     test_case_id = vars_dict.get("test_case_id", "")
     precondition = vars_dict.get("precondition")
     config = options.get("config", {}) or {}
-
     try:
         setup_dependencies(test_case_id, precondition, config)
-        answer = _invoke_agent(prompt, config, _exporter)
-        spans = list(_exporter.get_finished_spans())
-        trace_tree = _build_trace(prompt, answer, spans)
-        return {"output": json.dumps({"answer": answer, "trace": trace_tree}, ensure_ascii=False)}
+        _start_instrumentation()
+        answer, trace_tree = _invoke_agent(prompt, config)
+        return {
+            "output": json.dumps({"answer": answer, "trace": trace_tree}, ensure_ascii=False)
+        }
     finally:
+        _stop_instrumentation()
+        _restore_agent_factory()
         cleanup_dependencies()
