@@ -1,0 +1,5 @@
+id: file://provider_main.py
+label: "main / Mistral Small 2503"
+config:
+  model: mistral-small-2503
+  temperature: 0

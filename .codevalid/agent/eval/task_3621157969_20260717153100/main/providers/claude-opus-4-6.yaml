@@ -1,0 +1,5 @@
+id: file://provider_main.py
+label: "main / Claude Opus 4.6"
+config:
+  model: claude-opus-4-6
+  temperature: 0

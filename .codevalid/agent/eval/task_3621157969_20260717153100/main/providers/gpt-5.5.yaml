@@ -1,0 +1,5 @@
+id: file://provider_main.py
+label: "main / GPT-5.5"
+config:
+  model: gpt-5.5
+  temperature: 0

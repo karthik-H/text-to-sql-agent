@@ -16,13 +16,13 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 WORKSPACE_ROOT = Path(__file__).resolve().parents[5]
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
+AGENTS_DIR = WORKSPACE_ROOT / "agents"
+if str(AGENTS_DIR) not in sys.path:
+    sys.path.insert(0, str(AGENTS_DIR))
 
 import agent as target_agent
 
-try:
-    from opentelemetry.instrumentation.langchain import LangChainInstrumentor
-except Exception:  # pragma: no cover
-    from openinference.instrumentation.langchain import LangChainInstrumentor
+from opentelemetry.instrumentation.genai.langchain import LangChainInstrumentor
 
 _exporter = InMemorySpanExporter()
 _provider = TracerProvider()
