@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
-WORKSPACE_ROOT = Path(r"/private/var/folders/64/v39k3dlx3kl6dhmf1gjqpmr4rlcd68/T/test_gen_4373wtp8")
+WORKSPACE_ROOT = Path("/workspace/agents")
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 

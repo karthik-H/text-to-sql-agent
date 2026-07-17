@@ -1,0 +1,5 @@
+id: file://provider_main.py
+label: "main / claude-haiku-4-5"
+config:
+  model: claude-haiku-4-5
+  temperature: 0
