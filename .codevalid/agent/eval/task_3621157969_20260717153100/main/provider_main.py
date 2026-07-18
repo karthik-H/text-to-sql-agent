@@ -370,8 +370,3 @@ def call_api(prompt: str, options: dict, context: dict) -> dict:
         return {"output": json.dumps({"answer": answer, "trace": trace_tree}, ensure_ascii=False)}
     finally:
         cleanup_dependencies()
-        if _INSTRUMENTED:
-            try:
-                _instrumentor.uninstrument()
-            except Exception:
-                pass
